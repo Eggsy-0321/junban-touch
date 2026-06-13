@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_VERSION = "1.0.1";
+const CACHE_VERSION = "1.0.5";
 const CACHE_NAME = `app-cache-${CACHE_VERSION}`;
 const CACHE_FILES = [
   "./",

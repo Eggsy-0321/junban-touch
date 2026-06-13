@@ -15,6 +15,7 @@ const state = {
   maxMistakes: MAX_MISTAKES,
   tiles: [],
   isLocked: false,
+  hintRevealed: false,
   feedbackTimerId: null
 };
 
@@ -101,6 +102,7 @@ function resetRoundState() {
   state.mistakeCount = 0;
   state.tiles = [];
   state.isLocked = false;
+  state.hintRevealed = false;
   clearFeedbackTimer();
 }
 
@@ -145,6 +147,10 @@ function renderGameScreen() {
           ${renderMistakes()}
         </div>
       </div>
+      <button class="hint-box${state.hintRevealed ? " revealed" : ""}" type="button" data-action="toggle-hint" aria-expanded="${state.hintRevealed}" aria-label="ヒント">
+        <span class="hint-label">ヒント</span>
+        <span class="hint-answer" id="hintAnswer">${renderHint()}</span>
+      </button>
       <p class="feedback" id="feedback" role="status"></p>
       <div class="tile-grid" id="tileGrid">
         ${state.tiles.map((tile) => `
@@ -164,7 +170,22 @@ function renderGameScreen() {
   app.querySelectorAll(".tile").forEach((button) => {
     button.addEventListener("click", handleTileClick);
   });
+  app.querySelector("[data-action='toggle-hint']").addEventListener("click", toggleHint);
   app.querySelector("[data-action='title']").addEventListener("click", resetToTitle);
+}
+
+function renderHint() {
+  return state.hintRevealed ? state.answerText : "";
+}
+
+function toggleHint(event) {
+  state.hintRevealed = !state.hintRevealed;
+  const button = event.currentTarget;
+  const hintAnswer = document.getElementById("hintAnswer");
+
+  button.classList.toggle("revealed", state.hintRevealed);
+  button.setAttribute("aria-expanded", String(state.hintRevealed));
+  hintAnswer.textContent = renderHint();
 }
 
 function renderProgress() {
