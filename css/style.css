@@ -180,8 +180,7 @@ button {
   gap: 12px;
 }
 
-.mode-label,
-.mistake-label {
+.mode-label {
   margin: 0;
   font-weight: 700;
   font-size: clamp(1rem, 4.4vw, 1.25rem);
@@ -192,7 +191,30 @@ button {
 }
 
 .mistake-label {
-  color: #f97316;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.mistake-mark {
+  width: clamp(30px, 8vw, 42px);
+  height: clamp(30px, 8vw, 42px);
+  display: grid;
+  place-items: center;
+  border: 3px solid #f97316;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--danger);
+  font-size: clamp(1.55rem, 6.2vw, 2.15rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.mistake-mark.missed {
+  border-color: var(--danger);
+  background: #fff1f2;
+  animation: markMiss 180ms ease;
 }
 
 .tile-grid {
@@ -328,6 +350,18 @@ button {
   }
   75% {
     transform: translateX(-5px);
+  }
+}
+
+@keyframes markMiss {
+  0% {
+    transform: scale(0.72);
+  }
+  72% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 

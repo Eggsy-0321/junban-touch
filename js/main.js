@@ -141,7 +141,9 @@ function renderGameScreen() {
     <section class="screen panel">
       <div class="game-header">
         <p class="mode-label">ひらがなモード</p>
-        <p class="mistake-label" id="mistakeLabel">ミス：${state.mistakeCount} / ${state.maxMistakes}</p>
+        <div class="mistake-label" id="mistakeLabel" aria-label="ミス ${state.mistakeCount} / ${state.maxMistakes}">
+          ${renderMistakes()}
+        </div>
       </div>
       <p class="feedback" id="feedback" role="status"></p>
       <div class="tile-grid" id="tileGrid">
@@ -169,6 +171,13 @@ function renderProgress() {
   return state.answerChars
     .map((char, index) => (index < state.currentIndex ? char : "□"))
     .join("");
+}
+
+function renderMistakes() {
+  return Array.from({ length: state.maxMistakes }, (_, index) => {
+    const isMissed = index < state.mistakeCount;
+    return `<span class="mistake-mark${isMissed ? " missed" : ""}" aria-hidden="true">${isMissed ? "&times;" : ""}</span>`;
+  }).join("");
 }
 
 function handleTileClick(event) {
@@ -215,7 +224,9 @@ function handleCorrectTile(tile, button) {
 function handleWrongTile(button) {
   state.isLocked = true;
   state.mistakeCount += 1;
-  document.getElementById("mistakeLabel").textContent = `ミス：${state.mistakeCount} / ${state.maxMistakes}`;
+  const mistakeLabel = document.getElementById("mistakeLabel");
+  mistakeLabel.innerHTML = renderMistakes();
+  mistakeLabel.setAttribute("aria-label", `ミス ${state.mistakeCount} / ${state.maxMistakes}`);
   showTemporaryFeedback("ちがうよ");
   button.classList.remove("wrong");
   void button.offsetWidth;
