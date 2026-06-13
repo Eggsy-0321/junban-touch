@@ -153,7 +153,7 @@ function renderGameScreen() {
           </button>
         `).join("")}
       </div>
-      <div class="progress-box">
+      <div class="progress-box" style="--progress-count: ${state.answerChars.length}">
         <p class="progress-label">すすみぐあい</p>
         <p class="progress-text" id="progressText">${renderProgress()}</p>
       </div>
@@ -169,7 +169,7 @@ function renderGameScreen() {
 
 function renderProgress() {
   return state.answerChars
-    .map((char, index) => (index < state.currentIndex ? char : "□"))
+    .map((char, index) => `<span class="progress-char">${index < state.currentIndex ? char : "□"}</span>`)
     .join("");
 }
 
@@ -205,7 +205,7 @@ function handleCorrectTile(tile, button) {
   state.isLocked = true;
   tile.removed = true;
   state.currentIndex += 1;
-  document.getElementById("progressText").textContent = renderProgress();
+  document.getElementById("progressText").innerHTML = renderProgress();
   button.classList.add("correct");
   button.disabled = true;
   // 将来ここで正解音 correct を再生する想定です。

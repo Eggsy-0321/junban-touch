@@ -270,10 +270,18 @@ button {
 .progress-text {
   margin: 0;
   color: #0f766e;
-  font-size: clamp(2rem, 10vw, 3.2rem);
+  display: grid;
+  grid-template-columns: repeat(var(--progress-count, 1), minmax(0, 1fr));
+  gap: clamp(6px, 2vw, 14px);
+  align-items: center;
+  justify-items: center;
+  font-size: clamp(1.5rem, 8vw, 3.2rem);
   font-weight: 800;
   line-height: 1.2;
-  word-break: keep-all;
+}
+
+.progress-char {
+  min-width: 0;
 }
 
 .result-word {
