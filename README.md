@@ -46,3 +46,7 @@ GitHub Pagesでは、このリポジトリをPages公開することでそのま
 - 効果音
 - 難易度設定
 - ヒント表示
+## PWA icons
+
+PWA installation requires `icon-192.png` and `icon-512.png` in this directory.
+The manifest already references these files, so add the PNG images before publishing.
