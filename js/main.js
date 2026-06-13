@@ -31,7 +31,7 @@ function showTitleScreen() {
 
   setScreen("title", `
     <section class="screen panel">
-      <h1 class="title">じゅんばんタッチ</h1>
+      <h1 class="title">じゅんばん<br>タッチ</h1>
       <p class="subtitle">じゅんばんにタッチしてあそぼう！</p>
       <div class="mode-list">
         <button class="btn" type="button" data-action="hiragana-mode">ひらがなモード</button>
