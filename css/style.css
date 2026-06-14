@@ -269,11 +269,27 @@ button {
   overflow-wrap: anywhere;
 }
 
+.number-next {
+  font-size: clamp(1.7rem, 8vw, 2.4rem);
+}
+
 .tile-grid {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+.number-game {
+  gap: 12px;
+}
+
+.number-game .feedback {
+  min-height: 24px;
+}
+
+.number-grid {
+  gap: 10px;
 }
 
 .tile {
@@ -288,6 +304,12 @@ button {
   font-weight: 800;
   cursor: pointer;
   transition: transform 120ms ease, opacity 180ms ease;
+}
+
+.number-grid .tile {
+  min-height: 64px;
+  font-size: clamp(1.7rem, 9vw, 2.8rem);
+  line-height: 1;
 }
 
 .tile:hover,
@@ -334,6 +356,12 @@ button {
 
 .progress-char {
   min-width: 0;
+}
+
+.number-progress {
+  grid-template-columns: repeat(auto-fit, minmax(24px, 1fr));
+  gap: 6px;
+  font-size: clamp(1.05rem, 5vw, 1.65rem);
 }
 
 .result-word {
