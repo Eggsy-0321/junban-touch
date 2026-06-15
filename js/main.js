@@ -1,6 +1,7 @@
 "use strict";
 
 const BASIC_HIRAGANA = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん".split("");
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const MAX_MISTAKES = 3;
 
 const app = document.getElementById("app");
@@ -12,6 +13,7 @@ const state = {
   answerChars: [],
   numberMax: 0,
   numberSequence: [],
+  alphabetRangeName: "",
   currentIndex: 0,
   mistakeCount: 0,
   maxMistakes: MAX_MISTAKES,
@@ -33,6 +35,7 @@ function showTitleScreen() {
   state.answerChars = [];
   state.numberMax = 0;
   state.numberSequence = [];
+  state.alphabetRangeName = "";
 
   setScreen("title", `
     <section class="screen panel">
@@ -41,13 +44,14 @@ function showTitleScreen() {
       <div class="mode-list">
         <button class="btn" type="button" data-action="hiragana-mode">ひらがなモード</button>
         <button class="btn" type="button" data-action="number-mode">数字モード</button>
-        <button class="btn" type="button" disabled>英語モード 準備中</button>
+        <button class="btn" type="button" data-action="english-mode">英語モード</button>
       </div>
     </section>
   `);
 
   app.querySelector("[data-action='hiragana-mode']").addEventListener("click", showInputScreen);
   app.querySelector("[data-action='number-mode']").addEventListener("click", showNumberSettingsScreen);
+  app.querySelector("[data-action='english-mode']").addEventListener("click", showEnglishModeScreen);
 }
 
 function showInputScreen() {
@@ -105,6 +109,81 @@ function showNumberSettingsScreen() {
   app.querySelector("[data-action='title']").addEventListener("click", resetToTitle);
 }
 
+function showEnglishModeScreen() {
+  state.currentMode = "english";
+
+  setScreen("english-mode", `
+    <section class="screen panel">
+      <h2 class="screen-title">えいごモード</h2>
+      <p class="description">どっちであそぶ？</p>
+      <div class="mode-list">
+        <button class="btn" type="button" data-action="alphabet-mode">アルファベット</button>
+        <button class="btn" type="button" data-action="spelling-mode">スペル</button>
+      </div>
+      <button class="btn secondary" type="button" data-action="title">タイトルへ</button>
+    </section>
+  `);
+
+  app.querySelector("[data-action='alphabet-mode']").addEventListener("click", showAlphabetSettingsScreen);
+  app.querySelector("[data-action='spelling-mode']").addEventListener("click", showSpellingInputScreen);
+  app.querySelector("[data-action='title']").addEventListener("click", resetToTitle);
+}
+
+function showAlphabetSettingsScreen() {
+  state.currentMode = "alphabet";
+
+  setScreen("alphabet-settings", `
+    <section class="screen panel">
+      <h2 class="screen-title">アルファベット</h2>
+      <p class="description">どこをタッチする？</p>
+      <div class="mode-list">
+        <button class="btn" type="button" data-alphabet-range="first">前半 A〜M</button>
+        <button class="btn" type="button" data-alphabet-range="second">後半 N〜Z</button>
+        <button class="btn" type="button" data-alphabet-range="all">全部 A〜Z</button>
+      </div>
+      <button class="btn secondary" type="button" data-action="back">もどる</button>
+    </section>
+  `);
+
+  app.querySelectorAll("[data-alphabet-range]").forEach((button) => {
+    button.addEventListener("click", () => {
+      startAlphabetGame(button.dataset.alphabetRange);
+    });
+  });
+  app.querySelector("[data-action='back']").addEventListener("click", showEnglishModeScreen);
+}
+
+function showSpellingInputScreen() {
+  state.currentMode = "spelling";
+
+  setScreen("spelling-input", `
+    <section class="screen panel">
+      <h2 class="screen-title">スペル</h2>
+      <p class="description">えいたんごをいれてね</p>
+      <input class="input-field" id="spellingInput" type="text" inputmode="latin" maxlength="20" autocomplete="off" autocapitalize="characters" aria-label="えいたんご">
+      <p class="description small-note">1〜10文字の英字を入力してください</p>
+      <p class="error-message" id="spellingError" role="alert"></p>
+      <div class="button-row">
+        <button class="btn" type="button" data-action="start">スタート</button>
+        <button class="btn secondary" type="button" data-action="back">もどる</button>
+      </div>
+    </section>
+  `);
+
+  const input = document.getElementById("spellingInput");
+  input.focus();
+  app.querySelector("[data-action='start']").addEventListener("click", startSpellingGame);
+  app.querySelector("[data-action='back']").addEventListener("click", showEnglishModeScreen);
+  input.addEventListener("input", () => {
+    input.value = input.value.toUpperCase();
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      startSpellingGame();
+    }
+  });
+}
+
 function startGame() {
   const input = document.getElementById("hiraganaInput");
   const error = document.getElementById("inputError");
@@ -118,6 +197,62 @@ function startGame() {
   state.answerText = value;
   state.answerChars = Array.from(value);
   beginRound();
+}
+
+function startAlphabetGame(range) {
+  const settings = {
+    first: {
+      chars: ALPHABET.slice(0, 13),
+      label: "A〜M",
+      name: "前半"
+    },
+    second: {
+      chars: ALPHABET.slice(13),
+      label: "N〜Z",
+      name: "後半"
+    },
+    all: {
+      chars: ALPHABET,
+      label: "A〜Z",
+      name: "全部"
+    }
+  }[range];
+
+  if (!settings) {
+    showAlphabetSettingsScreen();
+    return;
+  }
+
+  state.currentMode = "alphabet";
+  state.alphabetRangeName = settings.name;
+  state.answerText = settings.label;
+  state.answerChars = settings.chars;
+  beginAlphabetRound();
+}
+
+function validateSpellingInput(value) {
+  return /^[A-Za-z]{1,10}$/.test(value);
+}
+
+function startSpellingGame() {
+  const input = document.getElementById("spellingInput");
+  const error = document.getElementById("spellingError");
+  const value = input.value.trim();
+
+  if (!value || value.length > 10) {
+    error.textContent = "1〜10文字の英字を入力してください";
+    return;
+  }
+
+  if (!validateSpellingInput(value)) {
+    error.textContent = "英字だけで入力してください";
+    return;
+  }
+
+  state.currentMode = "spelling";
+  state.answerText = value.toUpperCase();
+  state.answerChars = Array.from(state.answerText);
+  beginSpellingRound();
 }
 
 function startNumberGame(max) {
@@ -141,6 +276,19 @@ function beginNumberRound() {
   state.answerText = `1〜${state.numberMax}`;
   state.answerChars = state.numberSequence.map(String);
   state.tiles = createNumberTiles(state.numberSequence);
+  renderGameScreen();
+}
+
+function beginAlphabetRound() {
+  resetRoundState();
+  state.tiles = createAlphabetTiles(state.answerChars);
+  renderGameScreen();
+}
+
+function beginSpellingRound() {
+  resetRoundState();
+  state.answerChars = Array.from(state.answerText);
+  state.tiles = createEnglishSpellingTiles(state.answerChars);
   renderGameScreen();
 }
 
@@ -181,9 +329,43 @@ function createNumberTiles(numberSequence) {
   return shuffleArray(numberTiles);
 }
 
+function createAlphabetTiles(answerChars) {
+  const alphabetTiles = answerChars.map((char, index) => ({
+    id: `alphabet-${index}-${Date.now()}`,
+    char,
+    isAnswer: true,
+    removed: false
+  }));
+
+  return shuffleArray(alphabetTiles);
+}
+
+function createEnglishSpellingTiles(answerChars) {
+  const answerTiles = answerChars.map((char, index) => ({
+    id: `spell-answer-${index}-${Date.now()}`,
+    char,
+    isAnswer: true,
+    removed: false
+  }));
+  const randomTiles = getRandomEnglishTiles(answerChars, 5).map((char, index) => ({
+    id: `spell-random-${index}-${Date.now()}`,
+    char,
+    isAnswer: false,
+    removed: false
+  }));
+
+  return shuffleArray([...answerTiles, ...randomTiles]);
+}
+
 function getRandomHiraganaTiles(answerChars, count) {
   const used = new Set(answerChars);
   const candidates = BASIC_HIRAGANA.filter((char) => !used.has(char));
+  return shuffleArray(candidates).slice(0, count);
+}
+
+function getRandomEnglishTiles(answerChars, count) {
+  const used = new Set(answerChars);
+  const candidates = ALPHABET.filter((char) => !used.has(char));
   return shuffleArray(candidates).slice(0, count);
 }
 
@@ -198,10 +380,21 @@ function shuffleArray(items) {
 
 function renderGameScreen() {
   const isNumberMode = state.currentMode === "number";
-  const modeName = isNumberMode ? "数字モード" : "ひらがなモード";
-  const gameClass = isNumberMode ? " number-game" : "";
-  const tileGridClass = isNumberMode ? "tile-grid number-grid" : "tile-grid";
-  const progressClass = isNumberMode ? "progress-text number-progress" : "progress-text";
+  const isAlphabetMode = state.currentMode === "alphabet";
+  const isSpellingMode = state.currentMode === "spelling";
+  const modeName = getModeName();
+  const gameClass = isNumberMode || isAlphabetMode ? " number-game" : "";
+  const tileGridClass = isNumberMode
+    ? "tile-grid number-grid"
+    : isAlphabetMode
+      ? "tile-grid alphabet-grid"
+      : "tile-grid";
+  const progressClass = isNumberMode
+    ? "progress-text number-progress"
+    : isAlphabetMode
+      ? "progress-text alphabet-progress"
+      : "progress-text";
+  const hintClass = isNumberMode || isAlphabetMode || isSpellingMode ? " number-next" : "";
 
   setScreen("game", `
     <section class="screen panel${gameClass}">
@@ -211,17 +404,10 @@ function renderGameScreen() {
           ${renderMistakes()}
         </div>
       </div>
-      ${isNumberMode ? `
-        <button class="hint-box${state.hintRevealed ? " revealed" : ""}" type="button" data-action="toggle-hint" aria-expanded="${state.hintRevealed}" aria-label="ヒント">
-          <span class="hint-label">ヒント</span>
-          <span class="hint-answer number-next" id="hintAnswer">${renderHint()}</span>
-        </button>
-      ` : `
-        <button class="hint-box${state.hintRevealed ? " revealed" : ""}" type="button" data-action="toggle-hint" aria-expanded="${state.hintRevealed}" aria-label="ヒント">
-          <span class="hint-label">ヒント</span>
-          <span class="hint-answer" id="hintAnswer">${renderHint()}</span>
-        </button>
-      `}
+      <button class="hint-box${state.hintRevealed ? " revealed" : ""}" type="button" data-action="toggle-hint" aria-expanded="${state.hintRevealed}" aria-label="ヒント">
+        <span class="hint-label">ヒント</span>
+        <span class="hint-answer${hintClass}" id="hintAnswer">${renderHint()}</span>
+      </button>
       <p class="feedback" id="feedback" role="status"></p>
       <div class="${tileGridClass}" id="tileGrid">
         ${state.tiles.map((tile) => `
@@ -234,7 +420,7 @@ function renderGameScreen() {
         <p class="progress-label">すすみぐあい</p>
         <p class="${progressClass}" id="progressText">${renderProgress()}</p>
       </div>
-      <button class="btn secondary" type="button" data-action="title">${isNumberMode ? "タイトルへ" : "さいしょへ"}</button>
+      <button class="btn secondary" type="button" data-action="title">${isNumberMode || isAlphabetMode || isSpellingMode ? "タイトルへ" : "さいしょへ"}</button>
     </section>
   `);
 
@@ -248,14 +434,30 @@ function renderGameScreen() {
   app.querySelector("[data-action='title']").addEventListener("click", resetToTitle);
 }
 
+function getModeName() {
+  if (state.currentMode === "number") {
+    return "数字モード";
+  }
+
+  if (state.currentMode === "alphabet") {
+    return `アルファベット ${state.alphabetRangeName}`;
+  }
+
+  if (state.currentMode === "spelling") {
+    return "スペル";
+  }
+
+  return "ひらがなモード";
+}
+
 function renderHint() {
   if (!state.hintRevealed) {
     return "";
   }
 
-  if (state.currentMode === "number") {
-    const nextNumber = state.answerChars[state.currentIndex];
-    return nextNumber ? `つぎは「${nextNumber}」` : "";
+  if (state.currentMode === "number" || state.currentMode === "alphabet" || state.currentMode === "spelling") {
+    const nextChar = state.answerChars[state.currentIndex];
+    return nextChar ? `つぎは「${nextChar}」` : "";
   }
 
   return state.answerText;
@@ -272,6 +474,10 @@ function toggleHint(event) {
 }
 
 function renderProgress() {
+  if (state.currentMode === "alphabet") {
+    return `あと${state.answerChars.length - state.currentIndex}こ`;
+  }
+
   return state.answerChars
     .map((char, index) => `<span class="progress-char">${index < state.currentIndex ? char : "□"}</span>`)
     .join("");
@@ -310,7 +516,7 @@ function handleCorrectTile(tile, button) {
   tile.removed = true;
   state.currentIndex += 1;
   document.getElementById("progressText").innerHTML = renderProgress();
-  updateNextNumberLabel();
+  updateHintAnswer();
   button.classList.add("correct");
   button.disabled = true;
   // 将来ここで正解音 correct を再生する想定です。
@@ -349,14 +555,14 @@ function handleWrongTile(button) {
   }, 320);
 }
 
-function updateNextNumberLabel() {
-  if (state.currentMode !== "number") {
+function updateHintAnswer() {
+  if (!state.hintRevealed) {
     return;
   }
 
-  const nextLabel = document.getElementById("hintAnswer");
-  if (nextLabel) {
-    nextLabel.textContent = renderHint();
+  const hintAnswer = document.getElementById("hintAnswer");
+  if (hintAnswer) {
+    hintAnswer.textContent = renderHint();
   }
 }
 
@@ -383,6 +589,7 @@ function clearFeedbackTimer() {
 function showClearScreen() {
   clearFeedbackTimer();
   const isNumberMode = state.currentMode === "number";
+  const isEnglishMode = state.currentMode === "alphabet" || state.currentMode === "spelling";
   // 将来ここでクリア音 clear を再生する想定です。
   setScreen("clear", `
     <section class="screen panel">
@@ -398,7 +605,7 @@ function showClearScreen() {
       <p class="description">よくできました！</p>
       <div class="button-row">
         <button class="btn" type="button" data-action="retry">もういちど</button>
-        <button class="btn secondary" type="button" data-action="title">${isNumberMode ? "タイトルへ" : "さいしょへ"}</button>
+        <button class="btn secondary" type="button" data-action="title">${isNumberMode || isEnglishMode ? "タイトルへ" : "さいしょへ"}</button>
       </div>
     </section>
   `);
@@ -410,6 +617,7 @@ function showClearScreen() {
 function showGameOverScreen() {
   clearFeedbackTimer();
   const isNumberMode = state.currentMode === "number";
+  const isEnglishMode = state.currentMode === "alphabet" || state.currentMode === "spelling";
   // 将来ここでゲームオーバー音 gameover を再生する想定です。
   setScreen("gameover", `
     <section class="screen panel">
@@ -417,7 +625,7 @@ function showGameOverScreen() {
       <p class="description">もういちどやってみよう</p>
       <div class="button-row">
         <button class="btn" type="button" data-action="retry">もういちど</button>
-        <button class="btn secondary" type="button" data-action="title">${isNumberMode ? "タイトルへ" : "さいしょへ"}</button>
+        <button class="btn secondary" type="button" data-action="title">${isNumberMode || isEnglishMode ? "タイトルへ" : "さいしょへ"}</button>
       </div>
     </section>
   `);
@@ -429,6 +637,16 @@ function showGameOverScreen() {
 function retryGame() {
   if (state.currentMode === "number" && state.numberMax) {
     beginNumberRound();
+    return;
+  }
+
+  if (state.currentMode === "alphabet" && state.answerChars.length) {
+    beginAlphabetRound();
+    return;
+  }
+
+  if (state.currentMode === "spelling" && state.answerText) {
+    beginSpellingRound();
     return;
   }
 

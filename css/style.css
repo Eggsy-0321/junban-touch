@@ -90,6 +90,10 @@ button {
   line-height: 1.6;
 }
 
+.small-note {
+  font-size: clamp(0.92rem, 3.8vw, 1.08rem);
+}
+
 .mode-list,
 .button-row {
   width: 100%;
@@ -292,6 +296,11 @@ button {
   gap: 10px;
 }
 
+.alphabet-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .tile {
   aspect-ratio: 1 / 1;
   min-height: 78px;
@@ -309,6 +318,13 @@ button {
 .number-grid .tile {
   min-height: 64px;
   font-size: clamp(1.7rem, 9vw, 2.8rem);
+  line-height: 1;
+}
+
+.alphabet-grid .tile {
+  min-height: 48px;
+  border-width: 3px;
+  font-size: clamp(1.35rem, 8vw, 2.4rem);
   line-height: 1;
 }
 
@@ -362,6 +378,11 @@ button {
   grid-template-columns: repeat(auto-fit, minmax(24px, 1fr));
   gap: 6px;
   font-size: clamp(1.05rem, 5vw, 1.65rem);
+}
+
+.alphabet-progress {
+  display: block;
+  font-size: clamp(1.2rem, 5vw, 1.65rem);
 }
 
 .result-word {
@@ -511,5 +532,9 @@ button {
 
   .tile-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .alphabet-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
