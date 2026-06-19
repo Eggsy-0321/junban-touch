@@ -1,6 +1,23 @@
 "use strict";
 
 const BASIC_HIRAGANA = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん".split("");
+const KATAKANA_CHARS = [
+  "ア", "イ", "ウ", "エ", "オ",
+  "カ", "キ", "ク", "ケ", "コ",
+  "サ", "シ", "ス", "セ", "ソ",
+  "タ", "チ", "ツ", "テ", "ト",
+  "ナ", "ニ", "ヌ", "ネ", "ノ",
+  "ハ", "ヒ", "フ", "ヘ", "ホ",
+  "マ", "ミ", "ム", "メ", "モ",
+  "ヤ", "ユ", "ヨ",
+  "ラ", "リ", "ル", "レ", "ロ",
+  "ワ", "ヲ", "ン",
+  "ガ", "ギ", "グ", "ゲ", "ゴ",
+  "ザ", "ジ", "ズ", "ゼ", "ゾ",
+  "ダ", "ヂ", "ヅ", "デ", "ド",
+  "バ", "ビ", "ブ", "ベ", "ボ",
+  "パ", "ピ", "プ", "ペ", "ポ"
+];
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const MAX_MISTAKES = 3;
 
@@ -43,6 +60,7 @@ function showTitleScreen() {
       <p class="subtitle">じゅんばんにタッチしてあそぼう！</p>
       <div class="mode-list">
         <button class="btn" type="button" data-action="hiragana-mode">ひらがなモード</button>
+        <button class="btn" type="button" data-action="katakana-mode">カタカナモード</button>
         <button class="btn" type="button" data-action="number-mode">数字モード</button>
         <button class="btn" type="button" data-action="english-mode">英語モード</button>
       </div>
@@ -50,6 +68,7 @@ function showTitleScreen() {
   `);
 
   app.querySelector("[data-action='hiragana-mode']").addEventListener("click", showInputScreen);
+  app.querySelector("[data-action='katakana-mode']").addEventListener("click", showKatakanaInputScreen);
   app.querySelector("[data-action='number-mode']").addEventListener("click", showNumberSettingsScreen);
   app.querySelector("[data-action='english-mode']").addEventListener("click", showEnglishModeScreen);
 }
@@ -83,6 +102,37 @@ function showInputScreen() {
 
 function validateInput(value) {
   return /^[ぁ-ん]{1,8}$/.test(value);
+}
+
+function showKatakanaInputScreen() {
+  state.currentMode = "katakana";
+
+  setScreen("katakana-input", `
+    <section class="screen panel">
+      <h2 class="screen-title">カタカナモード</h2>
+      <p class="description">カタカナをいれてね</p>
+      <input class="input-field" id="katakanaInput" type="text" inputmode="text" maxlength="8" autocomplete="off" aria-label="カタカナのことば">
+      <p class="error-message" id="katakanaError" role="alert"></p>
+      <div class="button-row">
+        <button class="btn" type="button" data-action="start">スタート</button>
+        <button class="btn secondary" type="button" data-action="title">さいしょへ</button>
+      </div>
+    </section>
+  `);
+
+  const input = document.getElementById("katakanaInput");
+  input.focus();
+  app.querySelector("[data-action='start']").addEventListener("click", startKatakanaGame);
+  app.querySelector("[data-action='title']").addEventListener("click", resetToTitle);
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      startKatakanaGame();
+    }
+  });
+}
+
+function validateKatakanaInput(value) {
+  return /^[ァ-ヶー]{1,8}$/.test(value);
 }
 
 function showNumberSettingsScreen() {
@@ -199,6 +249,22 @@ function startGame() {
   beginRound();
 }
 
+function startKatakanaGame() {
+  const input = document.getElementById("katakanaInput");
+  const error = document.getElementById("katakanaError");
+  const value = input.value.trim();
+
+  if (!validateKatakanaInput(value)) {
+    error.textContent = "カタカナを1〜8文字で入力してね";
+    return;
+  }
+
+  state.currentMode = "katakana";
+  state.answerText = value;
+  state.answerChars = Array.from(value);
+  beginKatakanaRound();
+}
+
 function startAlphabetGame(range) {
   const settings = {
     first: {
@@ -270,6 +336,13 @@ function beginRound() {
   renderGameScreen();
 }
 
+function beginKatakanaRound() {
+  resetRoundState();
+  state.answerChars = Array.from(state.answerText);
+  state.tiles = createKatakanaTiles(state.answerChars);
+  renderGameScreen();
+}
+
 function beginNumberRound() {
   resetRoundState();
   state.numberSequence = Array.from({ length: state.numberMax }, (_, index) => index + 1);
@@ -310,6 +383,23 @@ function createTiles(answerChars) {
   }));
   const randomTiles = getRandomHiraganaTiles(answerChars, 5).map((char, index) => ({
     id: `random-${index}-${Date.now()}`,
+    char,
+    isAnswer: false,
+    removed: false
+  }));
+
+  return shuffleArray([...answerTiles, ...randomTiles]);
+}
+
+function createKatakanaTiles(answerChars) {
+  const answerTiles = answerChars.map((char, index) => ({
+    id: `katakana-answer-${index}-${Date.now()}`,
+    char,
+    isAnswer: true,
+    removed: false
+  }));
+  const randomTiles = getRandomKatakanaTiles(answerChars, 5).map((char, index) => ({
+    id: `katakana-random-${index}-${Date.now()}`,
     char,
     isAnswer: false,
     removed: false
@@ -360,6 +450,12 @@ function createEnglishSpellingTiles(answerChars) {
 function getRandomHiraganaTiles(answerChars, count) {
   const used = new Set(answerChars);
   const candidates = BASIC_HIRAGANA.filter((char) => !used.has(char));
+  return shuffleArray(candidates).slice(0, count);
+}
+
+function getRandomKatakanaTiles(answerChars, count) {
+  const used = new Set(answerChars);
+  const candidates = KATAKANA_CHARS.filter((char) => !used.has(char));
   return shuffleArray(candidates).slice(0, count);
 }
 
@@ -445,6 +541,10 @@ function getModeName() {
 
   if (state.currentMode === "spelling") {
     return "スペル";
+  }
+
+  if (state.currentMode === "katakana") {
+    return "カタカナモード";
   }
 
   return "ひらがなモード";
@@ -647,6 +747,11 @@ function retryGame() {
 
   if (state.currentMode === "spelling" && state.answerText) {
     beginSpellingRound();
+    return;
+  }
+
+  if (state.currentMode === "katakana" && state.answerText) {
+    beginKatakanaRound();
     return;
   }
 
