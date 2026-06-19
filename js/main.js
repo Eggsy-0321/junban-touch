@@ -379,13 +379,13 @@ function createTiles(answerChars) {
     id: `answer-${index}-${Date.now()}`,
     char,
     isAnswer: true,
-    removed: false
+    cleared: false
   }));
   const randomTiles = getRandomHiraganaTiles(answerChars, 5).map((char, index) => ({
     id: `random-${index}-${Date.now()}`,
     char,
     isAnswer: false,
-    removed: false
+    cleared: false
   }));
 
   return shuffleArray([...answerTiles, ...randomTiles]);
@@ -396,13 +396,13 @@ function createKatakanaTiles(answerChars) {
     id: `katakana-answer-${index}-${Date.now()}`,
     char,
     isAnswer: true,
-    removed: false
+    cleared: false
   }));
   const randomTiles = getRandomKatakanaTiles(answerChars, 5).map((char, index) => ({
     id: `katakana-random-${index}-${Date.now()}`,
     char,
     isAnswer: false,
-    removed: false
+    cleared: false
   }));
 
   return shuffleArray([...answerTiles, ...randomTiles]);
@@ -413,7 +413,7 @@ function createNumberTiles(numberSequence) {
     id: `number-${number}-${Date.now()}`,
     char: String(number),
     isAnswer: true,
-    removed: false
+    cleared: false
   }));
 
   return shuffleArray(numberTiles);
@@ -424,7 +424,7 @@ function createAlphabetTiles(answerChars) {
     id: `alphabet-${index}-${Date.now()}`,
     char,
     isAnswer: true,
-    removed: false
+    cleared: false
   }));
 
   return shuffleArray(alphabetTiles);
@@ -435,13 +435,13 @@ function createEnglishSpellingTiles(answerChars) {
     id: `spell-answer-${index}-${Date.now()}`,
     char,
     isAnswer: true,
-    removed: false
+    cleared: false
   }));
   const randomTiles = getRandomEnglishTiles(answerChars, 5).map((char, index) => ({
     id: `spell-random-${index}-${Date.now()}`,
     char,
     isAnswer: false,
-    removed: false
+    cleared: false
   }));
 
   return shuffleArray([...answerTiles, ...randomTiles]);
@@ -483,7 +483,7 @@ function renderGameScreen() {
   const tileGridClass = isNumberMode
     ? "tile-grid number-grid"
     : isAlphabetMode
-      ? "tile-grid alphabet-grid"
+      ? `tile-grid alphabet-grid${state.answerChars.length > 13 ? " alphabet-grid-all" : ""}`
       : "tile-grid";
   const progressClass = isNumberMode
     ? "progress-text number-progress"
@@ -493,7 +493,7 @@ function renderGameScreen() {
   const hintClass = isNumberMode || isAlphabetMode || isSpellingMode ? " number-next" : "";
 
   setScreen("game", `
-    <section class="screen panel${gameClass}">
+    <section class="screen panel game-screen${gameClass}">
       <div class="game-header">
         <p class="mode-label">${modeName}</p>
         <div class="mistake-label" id="mistakeLabel" aria-label="ミス ${state.mistakeCount} / ${state.maxMistakes}">
@@ -507,7 +507,7 @@ function renderGameScreen() {
       <p class="feedback" id="feedback" role="status"></p>
       <div class="${tileGridClass}" id="tileGrid">
         ${state.tiles.map((tile) => `
-          <button class="tile" type="button" data-tile-id="${tile.id}" aria-label="${tile.char}">
+          <button class="tile${tile.cleared ? " is-cleared" : ""}" type="button" data-tile-id="${tile.id}" aria-label="${tile.char}${tile.cleared ? " cleared" : ""}"${tile.cleared ? " disabled aria-disabled=\"true\"" : ""}>
             ${tile.char}
           </button>
         `).join("")}
@@ -599,7 +599,7 @@ function handleTileClick(event) {
   const tileId = button.dataset.tileId;
   const tile = state.tiles.find((item) => item.id === tileId);
 
-  if (!tile || tile.removed) {
+  if (!tile || tile.cleared) {
     return;
   }
 
@@ -613,16 +613,18 @@ function handleTileClick(event) {
 
 function handleCorrectTile(tile, button) {
   state.isLocked = true;
-  tile.removed = true;
+  tile.cleared = true;
   state.currentIndex += 1;
   document.getElementById("progressText").innerHTML = renderProgress();
   updateHintAnswer();
   button.classList.add("correct");
+  button.classList.add("is-cleared");
   button.disabled = true;
+  button.setAttribute("aria-disabled", "true");
   // 将来ここで正解音 correct を再生する想定です。
 
   window.setTimeout(() => {
-    button.remove();
+    button.classList.remove("correct");
     state.isLocked = false;
 
     if (state.currentIndex >= state.answerChars.length) {

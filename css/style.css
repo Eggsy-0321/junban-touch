@@ -18,8 +18,13 @@
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+}
+
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   color: var(--ink);
   font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
@@ -27,6 +32,7 @@ body {
     radial-gradient(circle at 18% 14%, rgba(255, 202, 87, 0.42), transparent 22%),
     radial-gradient(circle at 82% 12%, rgba(102, 204, 190, 0.32), transparent 20%),
     linear-gradient(180deg, #fff7d8 0%, #e9fbf4 100%);
+  overflow: hidden;
 }
 
 button,
@@ -41,15 +47,20 @@ button {
 .app-shell {
   width: min(100%, 520px);
   min-height: 100vh;
+  min-height: 100dvh;
+  max-height: 100dvh;
   margin: 0 auto;
-  padding: 22px 18px;
+  padding: 16px 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .screen {
   width: 100%;
+  min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -59,11 +70,38 @@ button {
 
 .panel {
   width: 100%;
+  max-height: 100%;
   padding: 26px 18px;
   border: 3px solid rgba(255, 255, 255, 0.92);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.88);
   box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.game-screen {
+  height: 100%;
+  gap: clamp(6px, 1.6dvh, 12px);
+  padding: clamp(10px, 2dvh, 18px) 12px;
+}
+
+.game-screen .hint-box {
+  min-height: 48px;
+  padding: 7px 10px;
+}
+
+.game-screen .feedback {
+  min-height: 20px;
+  font-size: 0.95rem;
+}
+
+.game-screen .progress-box {
+  padding: 8px 10px;
+}
+
+.game-screen > .btn.secondary {
+  min-height: 46px;
+  padding-block: 8px;
 }
 
 .title {
@@ -279,17 +317,17 @@ button {
 
 .tile-grid {
   width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  align-content: center;
+  justify-items: center;
 }
 
 .number-game {
-  gap: 12px;
-}
-
-.number-game .feedback {
-  min-height: 24px;
+  gap: 8px;
 }
 
 .number-grid {
@@ -301,9 +339,16 @@ button {
   gap: 8px;
 }
 
+.alphabet-grid-all {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
 .tile {
+  position: relative;
+  width: min(100%, clamp(62px, 16dvh, 108px));
   aspect-ratio: 1 / 1;
-  min-height: 78px;
+  min-height: 0;
   border: 4px solid var(--tile-border);
   border-radius: 8px;
   color: #7c2d12;
@@ -312,20 +357,25 @@ button {
   font-size: clamp(2rem, 12vw, 3.4rem);
   font-weight: 800;
   cursor: pointer;
-  transition: transform 120ms ease, opacity 180ms ease;
+  transition: transform 120ms ease, opacity 180ms ease, background-color 180ms ease, border-color 180ms ease;
 }
 
 .number-grid .tile {
-  min-height: 64px;
+  width: min(100%, clamp(54px, 13dvh, 92px));
   font-size: clamp(1.7rem, 9vw, 2.8rem);
   line-height: 1;
 }
 
 .alphabet-grid .tile {
-  min-height: 48px;
+  width: min(100%, clamp(46px, 10dvh, 76px));
   border-width: 3px;
   font-size: clamp(1.35rem, 8vw, 2.4rem);
   line-height: 1;
+}
+
+.alphabet-grid-all .tile {
+  width: min(100%, clamp(38px, 8dvh, 60px));
+  font-size: clamp(1.15rem, 7vw, 2rem);
 }
 
 .tile:hover,
@@ -335,7 +385,33 @@ button {
 
 .tile.correct {
   pointer-events: none;
-  animation: popAway 240ms ease forwards;
+  animation: correctPulse 220ms ease;
+}
+
+.tile.is-cleared {
+  opacity: 0.58;
+  border-color: #86cfc2;
+  color: #0f766e;
+  background: #dff8ee;
+  box-shadow: 0 4px 0 #8bd5c9;
+  cursor: default;
+  pointer-events: none;
+}
+
+.tile.is-cleared::after {
+  content: "\2713";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 1.25em;
+  height: 1.25em;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #2fb7a6;
+  font-size: 0.36em;
+  line-height: 1;
 }
 
 .tile.wrong {
@@ -432,18 +508,18 @@ button {
   animation-delay: 600ms;
 }
 
-@keyframes popAway {
+@keyframes correctPulse {
   0% {
     opacity: 1;
     transform: scale(1);
   }
-  60% {
+  55% {
     opacity: 1;
-    transform: scale(1.18);
+    transform: scale(1.08);
   }
   100% {
-    opacity: 0;
-    transform: scale(0);
+    opacity: 0.58;
+    transform: scale(1);
   }
 }
 
@@ -515,7 +591,7 @@ button {
 
 @media (min-width: 560px) {
   .app-shell {
-    padding: 34px 20px;
+    padding: 24px 20px;
   }
 
   .panel {

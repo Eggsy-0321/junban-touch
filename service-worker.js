@@ -1,13 +1,13 @@
 "use strict";
 
-const CACHE_VERSION = "1.2.1";
+const CACHE_VERSION = "1.2.2";
 const CACHE_NAME = `app-cache-${CACHE_VERSION}`;
 const CACHE_FILES = [
   "./",
   "./index.html",
   "./manifest.json",
   "./css/style.css",
-  "./js/main.js?v=1.2.1",
+  "./js/main.js?v=1.2.2",
   "./assets/audio/README.md",
   "./icon-192.png",
   "./icon-512.png"
