@@ -147,7 +147,7 @@ function showNumberSettingsScreen() {
         <button class="btn" type="button" data-number-max="10">1〜10</button>
         <button class="btn" type="button" data-number-max="15">1〜15</button>
       </div>
-      <button class="btn secondary" type="button" data-action="title">もどる</button>
+      <button class="btn secondary" type="button" data-action="title">さいしょへ</button>
     </section>
   `);
 
@@ -170,7 +170,7 @@ function showEnglishModeScreen() {
         <button class="btn" type="button" data-action="alphabet-mode">アルファベット</button>
         <button class="btn" type="button" data-action="spelling-mode">スペル</button>
       </div>
-      <button class="btn secondary" type="button" data-action="title">タイトルへ</button>
+      <button class="btn secondary" type="button" data-action="title">さいしょへ</button>
     </section>
   `);
 
@@ -516,7 +516,7 @@ function renderGameScreen() {
         <p class="progress-label">すすみぐあい</p>
         <p class="${progressClass}" id="progressText">${renderProgress()}</p>
       </div>
-      <button class="btn secondary" type="button" data-action="title">${isNumberMode || isAlphabetMode || isSpellingMode ? "タイトルへ" : "さいしょへ"}</button>
+      <button class="btn secondary" type="button" data-action="title">さいしょへ</button>
     </section>
   `);
 
@@ -555,12 +555,8 @@ function renderHint() {
     return "";
   }
 
-  if (state.currentMode === "number" || state.currentMode === "alphabet" || state.currentMode === "spelling") {
-    const nextChar = state.answerChars[state.currentIndex];
-    return nextChar ? `つぎは「${nextChar}」` : "";
-  }
-
-  return state.answerText;
+  const nextChar = state.answerChars[state.currentIndex];
+  return nextChar ? `つぎは「${nextChar}」` : "";
 }
 
 function toggleHint(event) {
@@ -691,7 +687,6 @@ function clearFeedbackTimer() {
 function showClearScreen() {
   clearFeedbackTimer();
   const isNumberMode = state.currentMode === "number";
-  const isEnglishMode = state.currentMode === "alphabet" || state.currentMode === "spelling";
   // 将来ここでクリア音 clear を再生する想定です。
   setScreen("clear", `
     <section class="screen panel">
@@ -707,7 +702,7 @@ function showClearScreen() {
       <p class="description">よくできました！</p>
       <div class="button-row">
         <button class="btn" type="button" data-action="retry">もういちど</button>
-        <button class="btn secondary" type="button" data-action="title">${isNumberMode || isEnglishMode ? "タイトルへ" : "さいしょへ"}</button>
+        <button class="btn secondary" type="button" data-action="title">さいしょへ</button>
       </div>
     </section>
   `);
@@ -719,7 +714,6 @@ function showClearScreen() {
 function showGameOverScreen() {
   clearFeedbackTimer();
   const isNumberMode = state.currentMode === "number";
-  const isEnglishMode = state.currentMode === "alphabet" || state.currentMode === "spelling";
   // 将来ここでゲームオーバー音 gameover を再生する想定です。
   setScreen("gameover", `
     <section class="screen panel">
@@ -727,7 +721,7 @@ function showGameOverScreen() {
       <p class="description">もういちどやってみよう</p>
       <div class="button-row">
         <button class="btn" type="button" data-action="retry">もういちど</button>
-        <button class="btn secondary" type="button" data-action="title">${isNumberMode || isEnglishMode ? "タイトルへ" : "さいしょへ"}</button>
+        <button class="btn secondary" type="button" data-action="title">さいしょへ</button>
       </div>
     </section>
   `);
