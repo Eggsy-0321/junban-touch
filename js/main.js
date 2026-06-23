@@ -55,7 +55,7 @@ function showTitleScreen() {
   state.alphabetRangeName = "";
 
   setScreen("title", `
-    <section class="screen panel">
+    <section class="screen panel title-screen">
       <h1 class="title">じゅんばん<br>タッチ</h1>
       <p class="subtitle">じゅんばんにタッチしてあそぼう！</p>
       <div class="mode-list">
@@ -479,12 +479,18 @@ function renderGameScreen() {
   const isAlphabetMode = state.currentMode === "alphabet";
   const isSpellingMode = state.currentMode === "spelling";
   const modeName = getModeName();
-  const gameClass = isNumberMode || isAlphabetMode ? " number-game" : "";
+  const gameClass = isNumberMode || isAlphabetMode
+    ? " number-game"
+    : isSpellingMode
+      ? " spelling-game"
+      : "";
   const tileGridClass = isNumberMode
     ? "tile-grid number-grid"
     : isAlphabetMode
       ? `tile-grid alphabet-grid${state.answerChars.length > 13 ? " alphabet-grid-all" : ""}`
-      : "tile-grid";
+      : isSpellingMode
+        ? "tile-grid spelling-grid"
+        : "tile-grid";
   const progressClass = isNumberMode
     ? "progress-text number-progress"
     : isAlphabetMode
