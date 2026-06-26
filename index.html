@@ -12,9 +12,11 @@
   <main class="app-shell" id="app" aria-live="polite"></main>
   <script src="js/main.js?v=1.2.7"></script>
   <script>
-    if ("serviceWorker" in navigator) {
+    if ("serviceWorker" in navigator && location.protocol === "https:") {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js");
+        navigator.serviceWorker.register("./service-worker.js").catch((error) => {
+          console.log("Service Worker registration failed:", error);
+        });
       });
     }
   </script>
